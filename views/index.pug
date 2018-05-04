@@ -1,0 +1,52 @@
+extend layout
+block head
+  link(rel='stylesheet', href='/libs/prism.css')
+
+block content
+  .section
+    .container
+      h1.pink-text.text-lighten-2= title
+  .section
+    .container
+      ul
+        li
+          a.debug-command Create a simple website
+        li
+          a.debug-command Download
+        li
+          a.debug-command Watch Ghost in the shell stand alone complex season 1 episode 2
+      span.describer.white-text Debug commands
+  .section
+    .container
+      .input-fields
+        label(for="#dialog") Write something here
+        input#dialog.white-text
+        button.subfix.btn.submit.waves-effect.waves-light(type='submit')
+          i.material-icons send
+  .section
+    .container
+      pre
+        code#context.language-javascript
+        span.describer Current context
+  .section
+    .container
+      .result#result
+        span.describer Navigation
+        h4.title Test
+        .question Display something
+        .answer Other 
+        a.link Go to the page
+        span.pager 1/1
+  .section
+    .container
+      .result#watch
+        span.describer Navigation
+        h4.title Test
+        iframe(width=1024, height=720)
+        a.link Go to the page
+        span.pager 1/1
+      
+block scriptAfter
+  script(src='/libs/prism.js')
+  script(src='/voice-interaction/docs/voice-interaction.js')
+  script(src='/javascripts/main.js')

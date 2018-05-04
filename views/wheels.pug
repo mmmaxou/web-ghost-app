@@ -1,0 +1,29 @@
+extend layout
+
+block head
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=Quicksand:500" rel="stylesheet')
+    link(rel='stylesheet', href='/stylesheets/wheels.css')
+    
+block content
+  .wheel-container
+    .wheel-overlay
+    .wheel
+      .wheel-center
+        .question Qui est patrick sebastien?
+      .wheel-outer
+        .content Quelqu'un
+      .wheel-outer
+        .content Oui
+      .wheel-outer
+        .content Non
+      .wheel-outer
+        .content 42
+      .wheel-outer
+        .content Obiwan Kenobi
+      .wheel-outer
+        .content Le grand frère de Donald Trump
+      .wheel-outer
+        .content Le grand frère de Donald Trump le président des Etats unis
+    
+block scriptAfter
+  script(src='/javascripts/wheels.js')

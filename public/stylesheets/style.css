@@ -1,0 +1,81 @@
+body {
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+body {
+  background-color: hsl(0, 0%, 13%);
+}
+
+.input-fields {
+  position: relative;
+}
+
+.input-fields .subfix {
+  position: absolute;
+  right: 0;
+}
+
+.debug-command {
+  color: #d97c8c;
+  cursor: pointer;
+  display: inline;
+}
+
+
+/* Results */
+
+.result {
+  background-color: white;
+  padding: 15px;
+  position: relative;
+  display: none;
+  margin-bottom: 100px;
+}
+
+.result>div,
+.result>a {
+  display: block;
+  margin-top: 15px;
+}
+
+.result .question:before {
+  content: 'Question > '
+}
+
+.result .answer:before {
+  content: 'Answer > '
+}
+
+.pager {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+}
+
+.result h4 {
+  margin-top: 0;
+}
+.result iframe{
+	width: 100%;
+  margin-bottom: 25px;
+}
+
+
+/* Pre && Code */
+
+pre,
+.container {
+  position: relative;
+}
+
+.describer {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+  font-style: italic;
+  font-family: 'Courier';
+}
