@@ -4,6 +4,7 @@ let path = require('path')
 
 let Context = {}
 Context.save = (context, display = true) => {
+  //console.trace()
   return new Promise((resolve, reject) => {
     jsonfile.writeFile(path.join(__dirname, '../data/context.json'), context, {
         spaces: 2

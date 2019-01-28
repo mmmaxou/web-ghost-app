@@ -61,7 +61,7 @@ $(document).ready(function () {
   let annyangWorking = true
 
   try {
-    annyang.init()
+    annyang.getSpeechRecognizer()
   } catch (exception) {
     console.warn('No Speech Recognition')
     annyangWorking = false
@@ -75,7 +75,7 @@ $(document).ready(function () {
   })
 
 
-  if (annyangWorking) {
+  if (annyang) {
     // Tell KITT to use annyang
     SpeechKITT.annyang()
 

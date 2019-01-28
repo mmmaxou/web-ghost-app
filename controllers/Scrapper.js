@@ -94,8 +94,8 @@ function Scrapper() {
           links.push({
             title: $(this).text(),
             link: l,
-            iframe: undefined,
-            vide: undefined
+            iframe: '',
+            video: ''
           })
         })
         inspect(links, 'Links')
@@ -117,16 +117,14 @@ function Scrapper() {
                   return
                 }
                 $ = cheerio.load(body)
+                console.log($.html('iframe'))
                 let $iframe = $('iframe').attr('src')
-                if ($iframe)
+                if ($iframe) {
                   elt.iframe = $iframe
-                let $video = $('video')
-                console.log($video.attr('id'))
-                let title = $('span#eow-title').text()
-                console.log('The title of the video %s is %s', elt.link, title)
+                }
+                let $video = $('video').attr('src')
                 if ($video) {
-                  let $videoHTML = $.html($video)
-                  //elt.video = $video
+                  elt.video = $video
                 }
                 resolve()
               })
@@ -139,10 +137,11 @@ function Scrapper() {
 
         Promise.all(promises)
           .then(function () {
+            inspect(links, 'Links before')
             links = links.filter((elt) => {
-              elt.iframe || elt.video
+              return elt.iframe != '' || elt.video != ''
             })
-            inspect(links, 'Links')
+            inspect(links, 'Links after')
             resolve(links)
           })
           .catch(function (err) {

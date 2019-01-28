@@ -19,7 +19,7 @@ function Ghost() {
     //    self.watch("ghost in the shell")
     Context.setItem('research', null)
     Brain.init()
-    self.watch('totally spies episode 8')
+    self.watch('Ghost in the shell stand alone complex season 1 episode 3')
 
 
   }
