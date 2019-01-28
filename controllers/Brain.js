@@ -3,124 +3,176 @@ const opn = require('opn')
 const fs = require('fs')
 const jsonfile = require('jsonfile')
 const Context = require('../helpers/Context')
-const readline = require('readline');
-const google = require('googleapis');
-const googleAuth = require('google-auth-library');
+const readline = require('readline')
+const google = require('googleapis')
+const googleAuth = require('google-auth-library')
 const inspect = require('eyes').inspector({
   maxLength: Infinity
 })
+const to = require('await-to-js').default
 
 function Brain() {
   let self = {
     auth: undefined,
     drive: google.drive('v3'),
+    folder: undefined,
   }
 
 
-  self.init = function () {
+  self.init = async () => {
     // Do something
     if (!self.auth) {
-      console.log(">_ Initiating brain");
-      self.getToken()
-      return
+      console.log(">_ Initiating brain")
+      await self.getToken()
     }
+    await self.initBrainFolder()
+    await self.getBrainFolder()
+    console.log(">_ Brain Initiated")
 
-    console.log(">_ Brain Initiated");
-    self.getBrainFolder()
-
-  }
-  self.getToken = function () {
-
-    // Load client secrets from a local file.
-    fs.readFile('data/client_id.json', function processClientSecrets(err, content) {
-      if (err) {
-        console.log('Error loading client secret file: ' + err);
-        return;
-      }
-      // Authorize a client with the loaded credentials, then call the
-      // Drive API.
-      authorize(JSON.parse(content), self.storeAuth);
-    });
 
   }
-  self.storeAuth = function (auth) {
-    self.auth = auth
-    self.init()
-  }
+  self.getToken = () => {
 
-  self.getBrainFolder = function () {
-    Context.get(function (context) {
-      inspect(context.brainFolder, "brainFolder")
-      if (!context.brainFolder) {
-        self.createBrainFolder(function (id) {
-          Context.setItem('brainFolder', id)
-          self.getBrainFolder()
-        })
-      } else {
-        // Check if it really exist
-        self.drive.files.list({
-          q: "mimeType = 'application/vnd.google-apps.folder' and name = 'Brain'",
-          auth: self.auth,
-          maxResults: 10,
-        }, function (err, response) {
+    return new Promise(resolve => {
+      // Load client secrets from a local file.
+      fs.readFile('data/client_id.json',
+        (err, content) => {
           if (err) {
-            console.log('The API returned an error: ' + err);
-            return;
-          }
-          console.log(response);
-
-          var files = response.files;
-          if (files.length == 0) {
-            console.log('No files found.');
-            Context.deleteItem('brainFolder', function () {
-              self.getBrainFolder()
-            })
+            console.log('Error loading client secret file: ' + err)
             return
-          } else if (files.length > 1) {
-            console.log('Too many BRAIN folder found.');
-          } else {
-            let folder = files[0]
-            console.log('Folder id:');
-            console.log(folder.id);
+          }
+          // Authorize a client with the loaded credentials, then call the
+          // Drive API.
+          authorize(JSON.parse(content),
+            (auth) => {
+              self.auth = auth
+              resolve()
+            })
+        })
+    })
+  }
+  self.initBrainFolder = () => {
+    return new Promise(async (bigResolve, bigReject) => {
 
-            if (context.brainFolder == folder.id) {
-              console.log('Folder id matching !')
-            } else {
-              console.log('Error');
-              Context.deleteItem('brainFolder', function () {
-                self.getBrainFolder()
-              })
-              return
-            }
+      let context = await Context.get()
+      //inspect(context.brainFolder, 'Context.brainFolder')
+
+      // Verify the brain Folder
+      if (!context.brainFolder) {
+        console.log('New folder ...')
+        const id = await self.createBrainFolder()
+        inspect(id, 'Folder created id')
+        context = await Context.setItem('brainFolder', id)
+        inspect(context, 'New context')
+      }
+
+
+      // Check if it really exist
+      let response = await new Promise((resolve, reject) => {
+        self.drive.files.list({
+            q: 'mimeType = "application/vnd.google-apps.folder" and name = "Brain"',
+            auth: self.auth,
+            maxResults: 10,
+          },
+          (err, res) => {
+            if (err) {
+              console.error('The API returned an error: ' + err)
+              throw new Error(err)
+            } else
+              resolve(res)
+          })
+      })
+      //inspect(response, 'Drive file list response')
+      let folders = response.files
+      let folder
+
+      // No folder : Create one
+      if (folders && folders.length == 0) {
+        console.info('No folder "Brain" found. Creating one and Reloading ...')
+        Context.deleteItem('brainFolder')
+          .then(() => {
+            self.initBrainFolder()
+          })
+        return
+      }
+
+      // Many folders : Select the right one
+      if (folders.length > 1) {
+        console.info('Many BRAIN folder found. Selecting one ...')
+        folders.forEach((file) => {
+          if (file.id == context.brainFolder)
+            folder = file
+          else
+            self.drive.files.delete({
+              auth: self.auth,
+              fileId: file.id
+            })
+        })
+        Context.setItem('brainFolder', folder.id)
+        self.folder = folder
+        bigResolve()
+        inspect(folder, 'Folder selected')
+      } else {
+
+        // Only one folder
+        folder = folders[0]
+        //inspect(folder.id, 'Folder.id')
+
+        if (context.brainFolder == folder.id) {
+          //console.log('Folder id matching !')
+          self.folder = folder
+          bigResolve()
+        } else {
+          console.error('Error : No Match')
+          Context.deleteItem('brainFolder')
+            .then(() => {
+              self.initBrainFolder()
+            })
+        }
+      }
+    })
+  }
+  self.createBrainFolder = () => {
+    return new Promise((resolve, reject) => {
+      const fileMetadata = {
+        'name': 'Brain',
+        'mimeType': 'application/vnd.google-apps.folder'
+      }
+      self.drive.files.create({
+        auth: self.auth,
+        resource: fileMetadata,
+        fields: 'id'
+      }, (err, file) => {
+        if (err) {
+          console.error(err)
+          reject(err)
+        } else {
+          inspect(file, 'Folder created')
+          resolve(file.id)
+        }
+      })
+    })
+  }
+  self.getBrainFolder = () => {
+    return new Promise((resolve, reject) => {
+      if (!self.folder.id) {
+        throw new Error('No folder id found')
+      }
+      self.drive.files.get({
+          auth: self.auth,
+          fileId: self.folder.id
+        },
+        (err, res) => {
+          if (err) {
+            inspect(err, 'err')
+            reject(err)
+          } else {
+            resolve(res)
+            self.folder = res
           }
         })
-
-      }
-
-    })
-
-
-
-  }
-  self.createBrainFolder = function (callback) {
-    var fileMetadata = {
-      'name': 'Brain',
-      'mimeType': 'application/vnd.google-apps.folder'
-    };
-    self.drive.files.create({
-      auth: self.auth,
-      resource: fileMetadata,
-      fields: 'id'
-    }, function (err, file) {
-      if (err) {
-        // Handle error
-        console.error(err);
-      } else {
-        callback(file.id)
-      }
     })
   }
-
 
 
 

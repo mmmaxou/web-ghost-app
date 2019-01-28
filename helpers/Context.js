@@ -2,52 +2,80 @@ let jsonfile = require('jsonfile')
 let path = require('path')
 
 
-let helper = {}
-helper.save = function (context, display = true, callback) {
-  jsonfile.writeFile(path.join(__dirname, '../data/context.json'), context, {
-      spaces: 2
-    },
-    function (err) {
-      if (err) throw err
-      if (helper.socket && display) {
-        helper.get(function (context) {
-          helper.socket.emit('context', context)
-        })
-      }
-      if (callback)
-        callback(context)
+let Context = {}
+Context.save = (context, display = true) => {
+  return new Promise((resolve, reject) => {
+    jsonfile.writeFile(path.join(__dirname, '../data/context.json'), context, {
+        spaces: 2
+      },
+      (err) => {
+        if (err)
+          reject(err)
+        if (Context.socket && display) {
+          Context.get()
+            .then((context) => {
+              Context.socket.emit('context', context)
+            })
+            .catch(err => {
+              console.error(err)
+              reject(err)
+            })
+        }
+        resolve(context)
+      })
+  })
+}
+Context.setItem = (field, data, display = true) => {
+  return new Promise((resolve, reject) => {
+    Context.get()
+      .then((context) => {
+        context[field] = data
+        Context.save(context, display)
+          .then(() => {
+            resolve(context)
+          })
+      })
+      .catch(reject)
+  })
+}
+Context.get = () => {
+  return new Promise((resolve, reject) => {
+    jsonfile.readFile(path.join(__dirname, '../data/context.json'),
+      (err, obj) => {
+        if (err)
+          reject(err)
+        else
+          resolve(obj)
+      })
+  })
+}
+Context.deleteItem = (field) => {
+  return new Promise((resolve, reject) => {
+    Context.get()
+      .then((context) => {
+        let newContext = {}
+        for (prop in context) {
+          if (context.hasOwnProperty(prop)) {
+            if (prop != field) {
+              newContext[prop] = context[prop]
+            }
+          }
+        }
+        Context.save(newContext, false)
+        resolve()
+      })
+  })
+}
+Context.setSocket = (socket) => {
+  Context.socket = socket
+  Context.get()
+    .then((context) => {
+      Context.socket.emit('context', context)
+    })
+    .catch(err => {
+      console.error(err)
+      throw Error(err)
     })
 }
-helper.setItem = function (field, data, display = true) {
-  helper.get(function (context) {
-    context[field] = data
-    helper.save(context, display)
-  })
-}
-helper.get = function (callback) {
-  jsonfile.readFile(path.join(__dirname, '../data/context.json'), function (err, obj) {
-    if (err) throw err
-    callback(obj)
-  })
-}
-helper.setSocket = function (socket) {
-  helper.socket = socket
-  helper.get(function (context) {
-    helper.socket.emit('context', context)
-  })
-}
-helper.deleteItem = function (field, callback) {
-  helper.get(function (context) {
-    let newContext = {}
-    for (prop in context) {
-      if (context.hasOwnProperty(prop)) {
-        if (prop != field) {
-          newContext[prop] = context[prop]
-        }
-      }
-    }
-    helper.save(newContext, false, callback)
-  })
-}
 
-module.exports = helper
+module.exports = Context

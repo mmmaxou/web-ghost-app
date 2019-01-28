@@ -1,6 +1,7 @@
 var socket = io()
-
+var recognition
 $(document).ready(function () {
+  annyang = undefined
 
   if (annyang) {
     // Add our commands to annyang
@@ -73,6 +74,42 @@ $(document).ready(function () {
     annyang.start()
   }
 
+  var colors = ['aqua', 'azure', 'beige', 'bisque', 'black', 'blue', 'brown', 'chocolate', 'coral'];
+  var grammar = '#JSGF V1.0; grammar colors; public <color> = ' + colors.join(' | ') + ' ;'
+
+  recognition = new SpeechRecognition();
+  var speechRecognitionList = new SpeechGrammarList();
+
+  recognition.grammars = speechRecognitionList;
+  //recognition.continuous = false;
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  speechRecognitionList.addFromString(grammar, 1);
+
+  recognition.onresult = function (event) {
+    var last = event.results.length - 1;
+    var color = event.results[last][0].transcript;
+    diagnostic.textContent = 'Result received: ' + color + '.';
+    bg.style.backgroundColor = color;
+    console.log('Confidence: ' + event.results[0][0].confidence);
+  }
+
+  recognition.onspeechend = function () {
+    recognition.stop();
+  }
+
+  recognition.onnomatch = function (event) {
+    diagnostic.textContent = 'I didnt recognise that color.';
+  }
+
+  recognition.onerror = function (event) {
+    diagnostic.textContent = 'Error occurred in recognition: ' + event.error;
+  }
+
+  recognition.start()
+
   $('.debug-command').click(function (e) {
     let command = $(this).text().toLowerCase()
     annyang.trigger(command)
@@ -95,29 +132,31 @@ let Search = {
     SEARCH: 0,
     WATCH: 1
   },
-  next () {
+  next() {
     this.currentPage++;
     this.currentPage = this.currentPage % (this.results.length)
     this.display()
   },
-  before () {
+  before() {
     this.currentPage--;
     this.currentPage = this.currentPage % (this.results.length - 1)
     this.display()
   },
-  display () {
-    switch ( this.type ) {
+  display() {
+    switch (this.type) {
       case this.TYPES.SEARCH:
-        this.displaySearch(); break;
+        this.displaySearch();
+        break;
       case this.TYPES.WATCH:
-        this.displayWatch(); break;
+        this.displayWatch();
+        break;
       default:
         console.log("I don't know what type to display")
         this.hide()
         break;
     }
   },
-  displaySearch () {
+  displaySearch() {
     let result = this.results[this.currentPage]
     if (result) {
       $('#result').fadeIn()
@@ -134,21 +173,21 @@ let Search = {
     }
     notification.play()
   },
-  displayWatch () {
+  displayWatch() {
     let result = this.results[this.currentPage]
-    if ( result ) {
+    if (result) {
       $('#watch').fadeIn()
       $('#watch iframe').attr('src', result.iframe)
       $('#watch .title').html(result.title)
       $('#watch .link')
         .attr('href', result.link)
         .attr('data-voice', $("#watch .link").text())
-      $('#watch .pager').text((this.currentPage + 1) + "/" + this.results.length)      
+      $('#watch .pager').text((this.currentPage + 1) + "/" + this.results.length)
     } else {
       console.error("Can't display");
-    }  
+    }
   },
-  hide () {
+  hide() {
     $('.result').hide()
   }
 }
@@ -165,9 +204,9 @@ socket.on('watch', function (result) {
   Search.display()
 })
 
-function display (text, sound = true) {
+function display(text, sound = true) {
   $('#context').text(text)
-  if ( sound ) notification.play()
+  if (sound) notification.play()
 }
 
 
@@ -175,7 +214,7 @@ function display (text, sound = true) {
 Notification Sound
 */
 const Notification = function () {
-  let soundFile  
+  let soundFile
   soundFile = document.createElement('audio')
   soundFile.preload = 'auto'
 
@@ -190,11 +229,13 @@ const Notification = function () {
   soundFile.volume = 1;
 
   return {
-    play () {
+    play() {
       soundFile.currentTime = 0.01
 
       //Due to a bug in Firefox, the audio needs to be played after a delay
-      setTimeout(() => {soundFile.play()} ,1);
+      setTimeout(() => {
+        soundFile.play()
+      }, 1);
     }
   }
 }
