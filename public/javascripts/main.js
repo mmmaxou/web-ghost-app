@@ -82,8 +82,8 @@ $(document).ready(function () {
 socket.on('context', function (context) {
   let json = JSON.stringify(context, null, '\t')
   display(json, false)
-//  console.log(context);
-//  console.log(json);
+  //  console.log(context);
+  //  console.log(json);
   Prism.highlightElement($('#context')[0])
 })
 
@@ -97,7 +97,7 @@ let Search = {
   },
   next () {
     this.currentPage++;
-    this.currentPage = this.currentPage % (this.results.length - 1)
+    this.currentPage = this.currentPage % (this.results.length)
     this.display()
   },
   before () {
@@ -154,11 +154,13 @@ let Search = {
 }
 socket.on('result', function (result) {
   Search.results = result
+  this.currentPage = 0
   Search.type = Search.TYPES.SEARCH
   Search.display()
 })
 socket.on('watch', function (result) {
   Search.results = result
+  this.currentPage = 0
   Search.type = Search.TYPES.WATCH
   Search.display()
 })

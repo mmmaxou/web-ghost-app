@@ -95,7 +95,7 @@ function Ghost() {
     })
   }
   self.watch = async function (query) {
-    query += " vostfr"
+    query += " streaming vostfr"
     self.say("I want to watch " + query)
     Context.setItem('research', {
       state: 'fetching',
