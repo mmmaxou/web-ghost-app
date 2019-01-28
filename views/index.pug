@@ -21,7 +21,7 @@ block content
       .input-fields
         label(for="#dialog") Write something here
         input#dialog.white-text
-        button.subfix.btn.submit.waves-effect.waves-light(type='submit')
+        button#dialog-enter.subfix.btn.submit.waves-effect.waves-light(type='submit')
           i.material-icons send
   .section
     .container
@@ -48,5 +48,4 @@ block content
       
 block scriptAfter
   script(src='/libs/prism.js')
-  script(src='/voice-interaction/docs/voice-interaction.js')
   script(src='/javascripts/main.js')

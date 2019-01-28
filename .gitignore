@@ -16,3 +16,5 @@ dump/
 *.bak*
 *.old*
 higherVolume/
+package-lock.json
+tmp/

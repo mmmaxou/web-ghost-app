@@ -1,6 +1,13 @@
 {
-  "research": null,
+  "research": {
+    "state": "done",
+    "query": "totally spies episode 8 streaming vostfr"
+  },
   "search website": "google",
-  "website": null,
+  "website": {
+    "name": "test",
+    "dir": "D:\\Max\\Softwares\\wamp\\www\\Ghost\\tmp\\test",
+    "existing": true
+  },
   "brainFolder": "1N1UuKs__USqvdKxEPZ6JJvN8GsYX_idU"
 }

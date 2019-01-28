@@ -22,7 +22,7 @@ function Scrapper() {
 
     request(param, function (err, res, body) {
       if (err) {
-        console.log("Couldn’ t get page because of error: " + err);
+        console.log('Couldn’ t get page because of error: ' + err);
         return;
       }
 
@@ -34,7 +34,7 @@ function Scrapper() {
           link: ans.link
         })
       })
-      inspect(resultsLinks, "resultsLinks")
+      inspect(resultsLinks, 'resultsLinks')
 
       promises = []
       resultsLinks.forEach(function (result) {
@@ -51,7 +51,7 @@ function Scrapper() {
             page.answer = $('#answers .answer').first().find('.post-text').text()
             page.link = result.link
 
-            inspect(page, "page")
+            inspect(page, 'page')
             resolve(page)
           })
         })
@@ -59,16 +59,16 @@ function Scrapper() {
       })
       Promise.all(promises)
         .then(function (res) {
-        inspect(res, "res")
-        cb(res)
-      })
+          inspect(res, 'res')
+          cb(res)
+        })
         .catch(function (err) {
-        console.error(err);
-      })
+          console.error(err);
+        })
     })
   }
   self.watchSomething = function (query) {
-    return new Promise( function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
 
       /// Create the url
       let url = `https://www.google.fr/search?q=` + query.replace(/ /gi, '+');
@@ -79,7 +79,7 @@ function Scrapper() {
       }
 
       /// Do the request
-      request(param, function(err, res, body) {
+      request(param, function (err, res, body) {
 
         /// Error Handling
         err ? reject(err) : undefined;
@@ -87,14 +87,15 @@ function Scrapper() {
         /// Gather all the links and display to console
         let links = []
         $ = cheerio.load(body)
-        $('#ires h3 > a').each(function(i, elem) {
+        $('#ires h3 > a').each(function (i, elem) {
           let l = $(this).attr('href')
           l = l.replace('/url?q=', '')
           l = l.substr(0, l.indexOf('&'))
           links.push({
             title: $(this).text(),
             link: l,
-            iframe: ""
+            iframe: undefined,
+            vide: undefined
           })
         })
         inspect(links, 'Links')
@@ -103,41 +104,53 @@ function Scrapper() {
         let promises = []
         links.forEach((elt) => {
           let p = new Promise(function (resolve, reject) {
-            var opts = {
-              maxRedirects: '2',
-              followRedirect: true,
-              uri: elt.link,
-              timeout: 10000
-            }
-            request(opts, function (err, res, body) {
-              if (err) {
-                console.log("Link No access")
-                resolve()
-                return
+              var opts = {
+                maxRedirects: '2',
+                followRedirect: true,
+                uri: elt.link,
+                timeout: 10000
               }
-              $ = cheerio.load(body)
-              let $iframe = $('iframe').attr('src')             
-              if ($iframe)
-                elt.iframe = $iframe
-              resolve()
+              request(opts, function (err, res, body) {
+                if (err) {
+                  console.log('Link No access')
+                  resolve()
+                  return
+                }
+                $ = cheerio.load(body)
+                let $iframe = $('iframe').attr('src')
+                if ($iframe)
+                  elt.iframe = $iframe
+                let $video = $('video')
+                console.log($video.attr('id'))
+                let title = $('span#eow-title').text()
+                console.log('The title of the video %s is %s', elt.link, title)
+                if ($video) {
+                  let $videoHTML = $.html($video)
+                  //elt.video = $video
+                }
+                resolve()
+              })
             })
-          })
+            .then(() => {})
+            .catch(err => {})
           promises.push(p)
         })
 
 
         Promise.all(promises)
           .then(function () {
-          links = links.filter( (elt) => elt.iframe != '')
-          inspect(links, "links")
-          resolve(links)
-        })
+            links = links.filter((elt) => {
+              elt.iframe || elt.video
+            })
+            inspect(links, 'Links')
+            resolve(links)
+          })
           .catch(function (err) {
-          console.error("Promise ERROR:", err);
-        })
+            console.error('Promise ERROR:', err);
+          })
 
       })
-    })    
+    })
   }
 
   return self

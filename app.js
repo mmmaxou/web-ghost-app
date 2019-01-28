@@ -13,7 +13,6 @@ let jsonfile = require('jsonfile')
 var index = require('./routes/index')
 var download = require('./routes/download')
 var downloadNull = require('./routes/download-null')
-var voice = require('./routes/voice')
 let wheels = require('./routes/wheels')
 Ghost.init()
 
@@ -51,7 +50,6 @@ app.set('port', port)
 // Routes
 app.use('/dl', download)
 app.use('/dl-null', downloadNull)
-app.use('/voice', voice)
 app.use('/wheels', wheels)
 app.use('/', index)
 
