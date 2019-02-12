@@ -1,38 +1,41 @@
 var socket = io()
 let context
 const commands = {
-  'reload' () {
+  'reload'() {
     window.location.reload()
   },
-  'create (a) (simple) website' () {
+  'create (a) (simple) website'() {
     socket.emit('create a simple website')
   },
-  'download' () {
+  'download'() {
     socket.emit('download')
+  },
+  'delete website'() {
+    socket.emit('delete website')
   },
   'search on *website': {
     'regexp': /^search on (stackoverflow|stack overflow|google)/i,
-    'callback' (website) {
+    'callback'(website) {
       website = website.toLowerCase()
       socket.emit('search website', website)
     }
   },
-  'search *query' (query) {
+  'search *query'(query) {
     socket.emit('search', query)
   },
-  'next' () {
+  'next'() {
     Search.next()
   },
-  'before' () {
+  'before'() {
     Search.before()
   },
-  'open' () {
+  'open'() {
     $('#result .link').click()
   },
-  'hide' () {
+  'hide'() {
     Search.hide()
   },
-  'help' () {
+  'help'() {
     $('#context').empty()
     for (key in commands) {
       if (commands.hasOwnProperty(key)) {
@@ -41,18 +44,22 @@ const commands = {
     }
     notification.play()
   },
-  'homepage' () {
+  'homepage'() {
     window.location.href = "/"
   },
-  'hello' () {
+  'hello'() {
     display('Hi, have a nice day !')
   },
-  'watch *query' (query) {
+  'watch *query'(query) {
     socket.emit('watch', query)
   },
-  'context' () {
-    display(context, false)
+  'context'() {
+    display(context)
     Prism.highlightElement($('#context')[0])
+  },
+  'again'() {
+    if (typeof annyang.lastCommand == "string")
+      annyang.trigger(annyang.lastCommand)
   }
 
 }
@@ -73,14 +80,20 @@ $(document).ready(function () {
   annyang.addCallback('resultNoMatch', function (userSaid) {
     display(`Unknown command ${userSaid}, try :'help'`)
   })
+  annyang.addCallback('resultMatch', (userSaid, commandFound) => {
+    annyang.lastCommand = userSaid
+  })
 
 
   if (annyang) {
     // Tell KITT to use annyang
     SpeechKITT.annyang()
 
+    SpeechKITT.setSampleCommands(commands)
     // Define a stylesheet for KITT to use
-    SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/0.3.0/themes/flat.css')
+    const style = '//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat-turquoise.css'
+    SpeechKITT.setStylesheet(style);
+    SpeechKITT.setInstructionsText('Say "help" to use voice recognition')
 
     // Render KITT's interface
     SpeechKITT.vroom()
@@ -111,26 +124,26 @@ const Search = {
   results: null,
   currentPage: 0,
   type: null,
-  TYPES: {
+  TYPE: {
     SEARCH: 0,
     WATCH: 1
   },
   next() {
     this.currentPage++
-      this.currentPage = this.currentPage % (this.results.length)
+    this.currentPage = this.currentPage % (this.results.length)
     this.display()
   },
   before() {
     this.currentPage--
-      this.currentPage = this.currentPage % (this.results.length - 1)
+    this.currentPage = this.currentPage % (this.results.length - 1)
     this.display()
   },
   display() {
     switch (this.type) {
-      case this.TYPES.SEARCH:
+      case this.TYPE.SEARCH:
         this.displaySearch()
         break
-      case this.TYPES.WATCH:
+      case this.TYPE.WATCH:
         this.displayWatch()
         break
       default:
@@ -148,8 +161,6 @@ const Search = {
       $('#result .answer').html(result.answer)
       $('#result .link')
         .attr('href', result.link)
-        .attr('data-voice', $("#result .link").text())
-      Voice.addLink($("#result .link")[0], result.link)
       $('#result .pager').text((this.currentPage + 1) + "/" + this.results.length)
     } else {
       console.error("Can't display")
@@ -164,7 +175,6 @@ const Search = {
       $('#watch .title').html(result.title)
       $('#watch .link')
         .attr('href', result.link)
-        .attr('data-voice', $("#watch .link").text())
       $('#watch .pager').text((this.currentPage + 1) + "/" + this.results.length)
     } else {
       console.error("Can't display")
@@ -177,13 +187,13 @@ const Search = {
 socket.on('result', function (result) {
   Search.results = result
   this.currentPage = 0
-  Search.type = Search.TYPES.SEARCH
+  Search.type = Search.TYPE.SEARCH
   Search.display()
 })
 socket.on('watch', function (result) {
   Search.results = result
   this.currentPage = 0
-  Search.type = Search.TYPES.WATCH
+  Search.type = Search.TYPE.WATCH
   Search.display()
 })
 

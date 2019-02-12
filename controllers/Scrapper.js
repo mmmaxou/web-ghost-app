@@ -6,12 +6,25 @@ let rp = require('request-promise-native')
 let inspect = require('eyes').inspector({
   maxLength: Infinity
 })
+let inspectNoFunc = require('eyes').inspector({
+  hideFunctions: true,
+  maxLength: Infinity
+})
 
 
 function Scrapper() {
   let self = {}
 
-  self.searchStackoverflow = function (q, cb) {
+  // Utils
+  const createParamsFromUrl = (url) => {
+    return {
+      method: 'GET',
+      uri: url,
+      gzip: true
+    }
+  }
+
+  self.searchStackoverflow = (q, cb) => {
     let tags = 'javascript'
     let url = `https://api.stackexchange.com/2.2/search/advanced?order=desc&sort=relevance&q=${q}&closed=True&tagged=${tags}&site=stackoverflow`
     let param = {
@@ -67,19 +80,15 @@ function Scrapper() {
         })
     })
   }
-  self.watchSomething = function (query) {
+  self.watchSomething = (query) => {
     return new Promise(function (resolve, reject) {
 
       /// Create the url
       let url = `https://www.google.fr/search?q=` + query.replace(/ /gi, '+');
-      let param = {
-        method: 'GET',
-        uri: url,
-        gzip: true
-      }
+      let param = createParamsFromUrl(url)
 
       /// Do the request
-      request(param, function (err, res, body) {
+      request(param, (err, res, body) => {
 
         /// Error Handling
         err ? reject(err) : undefined;
@@ -94,11 +103,9 @@ function Scrapper() {
           links.push({
             title: $(this).text(),
             link: l,
-            iframe: '',
-            video: ''
+            iframe: ''
           })
         })
-        inspect(links, 'Links')
 
         /// Now let's search on each page
         let promises = []
@@ -116,15 +123,18 @@ function Scrapper() {
                   resolve()
                   return
                 }
-                $ = cheerio.load(body)
-                console.log($.html('iframe'))
-                let $iframe = $('iframe').attr('src')
-                if ($iframe) {
+
+                // Youtube specific
+                if (elt.link.match(/youtube/)) {
+                  let $iframe = elt.link.replace('/watch?v=', '/embed/')
                   elt.iframe = $iframe
-                }
-                let $video = $('video').attr('src')
-                if ($video) {
-                  elt.video = $video
+                } else {
+                  $ = cheerio.load(body)
+                  console.log($.html('iframe'))
+                  let $iframe = $('iframe').attr('src')
+                  if ($iframe) {
+                    elt.iframe = $iframe
+                  }
                 }
                 resolve()
               })
@@ -137,11 +147,10 @@ function Scrapper() {
 
         Promise.all(promises)
           .then(function () {
-            inspect(links, 'Links before')
             links = links.filter((elt) => {
-              return elt.iframe != '' || elt.video != ''
+              return elt.iframe != ''
             })
-            inspect(links, 'Links after')
+            inspect(links, 'Links')
             resolve(links)
           })
           .catch(function (err) {

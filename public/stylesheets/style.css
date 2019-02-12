@@ -36,8 +36,8 @@ body {
   margin-bottom: 100px;
 }
 
-.result>div,
-.result>a {
+.result > div,
+.result > a {
   display: block;
   margin-top: 15px;
 }
@@ -59,11 +59,36 @@ body {
 .result h4 {
   margin-top: 0;
 }
-.result iframe{
-	width: 100%;
+
+.result iframe {
+  width: 100%;
   margin-bottom: 25px;
 }
 
+/* Skitt update */
+@media (max-width: 1200px) {
+  div#skitt-ui {
+    font-size: 16px;
+    height: 50px;
+  }
+
+  #skitt-ui #skitt-toggle-button {
+    width: 50px;
+    height: 50px;
+    background-position: 7px 6px;
+  }
+
+  #skitt-ui #skitt-listening-box {
+    line-height: 50px;
+  }
+
+}
+
+#skitt-ui #skitt-listening-text {
+  transition: width 200ms ease;
+}
+
+#skitt-listening-text span {}
 
 /* Pre && Code */
 

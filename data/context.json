@@ -1,13 +1,10 @@
 {
-  "research": {
-    "state": "done",
-    "query": "golden City streaming vostfr"
-  },
+  "research": null,
   "search website": "google",
+  "brainFolder": "1N1UuKs__USqvdKxEPZ6JJvN8GsYX_idU",
   "website": {
     "name": "test",
     "dir": "D:\\Max\\Softwares\\wamp\\www\\Ghost\\tmp\\test",
     "existing": true
-  },
-  "brainFolder": "1N1UuKs__USqvdKxEPZ6JJvN8GsYX_idU"
+  }
 }

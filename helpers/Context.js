@@ -33,7 +33,7 @@ Context.setItem = (field, data, display = true) => {
         context[field] = data
         Context.save(context, display)
           .then(() => {
-            resolve(context)
+            resolve(context[field])
           })
       })
       .catch(reject)
@@ -63,7 +63,7 @@ Context.deleteItem = (field) => {
           }
         }
         Context.save(newContext, false)
-        resolve()
+        resolve(context[field])
       })
   })
 }
